@@ -4,16 +4,27 @@ FROM ubuntu:xenial
 
 LABEL maintainer="Saimus Dev"
 
+USER root
+
+ENV LANG C.UTF-8
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+
+# Add 'universe' repos
+RUN sed 's/main$/main universe/' -i /etc/apt/sources.list
+
 #########################################################################################################################################
 # NETWORKING & SOURCING
-
 RUN apt-get -qq update \
     && apt-get -qq install -y --no-install-recommends \
-       git=1:2.* \
-       wget=1.* \
-       curl=7.* \
+       net-tools \
+       iputils-ping \
+       wget \
+       curl \
+       zip \
        unzip \
-       xz-utils=5.* \
+       xz-utils \
+       software-properties-common \
        ca-certificates
 
 #########################################################################################################################################
@@ -31,18 +42,29 @@ RUN USER=docker && \
 
 #########################################################################################################################################
 # BASIC CONSOLE DEV TOOLS
-
 RUN apt-get -qq update \
     && apt-get -qq install -y --no-install-recommends \
+       git \
        vim \
+       sudo \
        zsh
 
 #########################################################################################################################################
 # OH-MY-ZSH
-RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
+USER docker
+# terminal colors with xterm
+ENV TERM xterm
+# set the zsh theme 
+ENV ZSH_THEME agnoster
+
+RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
 #########################################################################################################################################
 # ENTRYPOINT
 
+WORKDIR /home/docker
+
 ENTRYPOINT ["fixuid"]
+
+CMD ["zsh"]
